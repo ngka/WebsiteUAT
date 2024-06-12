@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Records</title>
+    <link href="./bootstrap-5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./DataTables/datatables.min.css" rel="stylesheet">
+    <script src="./DataTables/datatables.min.js"></script>
+    <script src="./utils.js"></script>
+    <style>
+      .my-popover.popover {
+        max-width: 500px; /* Adjust this value to your desired width */
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary mb-2">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Civil Works Supervisor Records</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="./">Home</a>
+            </li>
+            <li class="nav-item d-none" id="nav-create-user">
+              <a class="nav-link" href='/create-user.html'>Create User</a>
+            </li>
+            <!-- <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Dropdown
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Action</a></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              </ul>
+            </li> -->
+            <li class="nav-item">
+              <a class="nav-link" href="/api/logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="row mb-2">
+        <div class="col"><h5>Work Order <span id='work_order_number'></span>
+          <button id="workOrderDetailButton" type="button" class="btn"  data-bs-toggle="popover" data-bs-title="Details" data-bs-content="" data-bs-html="true"  data-bs-custom-class="my-popover" data-bs-trigger="hover focus">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+              <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+            </svg>
+          </button>
+        </h5></div>
+        <div class="col"><p>Description: <span id="description"></span></p></div>
+        <div class="col">Open Date: <span id="openDate"></span></div>
+      </div>
+      <table id="example" class="table table-striped" style="width:100%">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Associated Works</th>
+                <th>Item Details</th>
+                <th>People</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary mb-2">Export Report</button>
+    </div>
+
+    <div class="modal modal-xl  fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Create Records</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form class="dropzone" action="/api/records" method="post" id="form">
+          <div class="modal-body">
+            <input id="formWorkOrderNumber" name="work_order_number" type="hidden"></input>
+            <input id="formRecordId" name="id" type="hidden"></input>
+            <div class="mb-2">
+              <label for="formDate" class="form-label">Date</label>
+              <input type="date" class="form-control" id="formDate" name="record_date">
+            </div>
+            <div class="mb-2">
+              <label for="formRemarks" class="form-label">Associated Works</label>
+              <textarea class="form-control" id="formRemarks" rows="3" name="associated_works"></textarea>
+            </div>
+            <div class="mb-2">
+              <label for="formFileMultiple" class="form-label">Files</label>
+              <input class="form-control" type="file" id="formFileMultiple" name="file" multiple onchange="handleSelectedImagesChange(event)">
+            </div>
+            <div id="image-container"></div>
+            <label for="formDate" class="form-label">Dimension</label>
+            <div class="input-group mb-2">
+              <span class="input-group-text">L(m)</span>
+              <input type="text" class="form-control"  aria-label="L" id="excavation_l_m" name="excavation_l_m">
+              <span class="input-group-text">W(mm)</span>
+              <input type="text" class="form-control" aria-label="Server" id="excavation_w_mm" name="excavation_w_mm">
+              <span class="input-group-text">D(mm)</span>
+              <input type="text" class="form-control" aria-label="Server" id="excavation_d_mm" name="excavation_d_mm">
+              <span class="input-group-text">Formation</span>
+              <input type="text" class="form-control" aria-label="Server" id="excavation_duct_formation" name="excavation_duct_formation">
+            </div>
+            <label for="formDate" class="form-label">Surface</label>
+            <div class="input-group mb-2">
+              <span class="input-group-text">CW</span>
+              <input type="text" class="form-control"  id="surface_c_w" name="surface_c_w">
+              <span class="input-group-text">FW</span>
+              <input type="text" class="form-control" id="surface_f_w" name="surface_f_w">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </form>
+      </div>
+    </div>
+    
+  </body>
+  <script src="./bootstrap-5.3.2/js/popper.min.js"></script>
+  <script src="./bootstrap-5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script>
+
+    let formMultipleInputFiles = [];
+
+    function setUpPopover(){
+      const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+      const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+    }
+
+    let records;
+    document.getElementById('formDate').valueAsDate = new Date();
+
+
+    var recordModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    document.getElementById('exampleModal').addEventListener('hidden.bs.modal', function(){
+      document.getElementById('form').method = 'POST'
+      document.getElementById('form').reset()
+      formMultipleInputFiles = []
+      document.getElementById('exampleModalLabel').innerText = 'Create Record'
+      document.getElementById('formDate').valueAsDate = new Date();
+      document.getElementById('image-container').innerHTML = '';
+    })
+
+    function openModal(){
+      recordModal.show()
+    }
+  
+
+    function editRecord(index){
+      document.getElementById('exampleModalLabel').innerText = 'Edit Record'
+      document.getElementById('form').method = 'PUT'
+      const record = records[index]
+      const date = new Date(record[1])
+      document.getElementById('formRecordId').value = record[18]
+      document.getElementById('formDate').value = `${date.getFullYear()}-${((date.getMonth()+1).toString().padStart(2, '0'))}-${date.getDate().toString().padStart(2, 0)}` 
+      document.getElementById('formRemarks').value = record[8]
+      document.getElementById('excavation_l_m').value = record[2]
+      document.getElementById('excavation_w_mm').value = record[3]
+      document.getElementById('excavation_d_mm').value = record[4]
+      document.getElementById('excavation_duct_formation').value = record[5]
+      document.getElementById('surface_c_w').value = record[6]
+      document.getElementById('surface_f_w').value = record[7]
+      displayImages(workOrderNumber, [record[12], record[13], record[14], record[15], record[16]], [record[19], record[20], record[21], record[22], record[23]])
+
+      openModal()
+    }
+
+    const workOrderNumber = new URLSearchParams(window.location.search).get('work_order_number');
+    document.getElementById('formWorkOrderNumber').value = workOrderNumber;
+    document.getElementById('work_order_number').innerText = workOrderNumber;
+
+    fetch(`/api/work-order?work_order_number=${encodeURIComponent(workOrderNumber)}`)
+      .then(result => result.json())
+      .then(result => {
+        document.getElementById('openDate').innerText = new Date(result.rows[0][14]).toLocaleDateString()
+        document.getElementById('description').innerText = result.rows[0][4]
+        document.getElementById('workOrderDetailButton').setAttribute('data-bs-content', result.columns.map((column, index)=>column + ': ' + result.rows[0][index]).join('<br/>'))
+        setUpPopover()
+      })
+
+    fetch(`/api/records?work_order_number=${encodeURIComponent(workOrderNumber)}`)
+      .then(result => result.json())
+      .then(result=> {
+        records = result.rows
+        document.querySelector('tbody').innerHTML = result.rows.map(renderRow).join('')
+        new DataTable('#example', {
+          dom: "<'row'<'col-sm-12 col-md-1'B><'col-sm-12 col-md-5'l><'col-sm-12 col-md-6'f>>" +
+            "<'row'<'col-sm-12'tr>>" +
+            "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+          buttons: [
+            {text:'Create', action: ()=>openModal()}
+          ],
+          "order": []
+        });
+
+      })
+
+    function renderRow(row, index){
+
+      return `<tr>
+        <td>${new Date(row[1]).toLocaleDateString()}</td>
+        <td>${row[8] || ''}</td>
+        <td>${row[2]? `L${row[2]}m W${row[3]}mm D${row[4]}mm ${row[5]} CW${row[6]} FW${row[7]}` : ''}</td>
+        <td>${row[11]}</td>
+        <th>
+          <button type="button" class="btn" onclick='editRecord(${index});''>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+              <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+            </svg>
+          </button>
+          ${['admin', 'supervisor'].includes(user.role) ?
+              // if user is admin or supervisor
+              (row[9]? `<button class="btn btn-success" disabled>Approved</button>`: `<button class="btn btn-primary" onclick='approve(${index})'>Approve</button>`):
+              // if user is normal user
+              (row[9]? `<button class="btn btn-success" disabled>Approved</button>`: `<button class="btn btn-primary" disabled>Pending</button>`)
+          }
+        </th>
+        </tr>`
+    }
+
+    function displayImages(work_order_number, files, descriptions){
+
+      let readFileList = [];
+      let pending = 0
+
+      files.forEach((filename, index) => {
+        if (filename == null) return;
+        pending += 1;
+
+        fetch('/photos/'+encodeURIComponent(encodeURIComponent(work_order_number)) +'/'+filename)
+          .then(response => response.blob())
+          .then(blob => {
+            let file=new File([blob], filename, {type: 'image/'+filename.split('.').pop()})
+            file.uploaded = true
+            file.description = descriptions[index]
+            readFileList[index] = file
+            pending -=1;
+            if (pending == 0){
+              document.getElementById('formFileMultiple').files = constructFileList(readFileList)
+              handleSelectedImagesChange({target: document.getElementById('formFileMultiple')})
+            }
+          })
+      })
+    }
+
+    function handleSelectedImagesChange(event) {
+      // change the behavior to append instead of rewrite when file is selected
+      formMultipleInputFiles = [ ...formMultipleInputFiles, ...event.target.files]
+      event.target.files = constructFileList(formMultipleInputFiles)
+      let files = event.target.files; // Get the selected files
+
+      var imageContainer = document.getElementById("image-container");
+
+      // Clear previous images
+      imageContainer.innerHTML = "";
+
+      // Loop through the selected files
+      for (let i = 0; i < files.length; i++) {
+        let file = files[i];
+        // Check if the file is an image
+        if (file.type.match("image.*")) {
+          let reader = new FileReader();
+
+          // Read the image file as a data URL
+          reader.readAsDataURL(file);
+
+          // Create a container div for the image
+          let imageWrapper = document.createElement("div");
+          imageWrapper.className = "image-wrapper";
+
+          let details = document.createElement('input')
+          details.placeholder = 'Image' + (i+1) + ' Description'
+          details.name = `photo_${i+1}_description`
+          details.id = `photo_${i+1}_description`
+          details.value = file.description || ''
+          details.onchange = (evt) => {
+            file.description = evt.target.value
+          }
+
+          // Create an image element and set its source to the data URL
+          reader.onload = function (e) {
+            let img = document.createElement("img");
+            img.src = e.target.result;
+            img.className = "selected-image";
+
+            // Create a cross button to remove the image
+            let crossButton = document.createElement("button");
+            crossButton.innerHTML = "×";
+            crossButton.className = "remove-button";
+            crossButton.addEventListener("click", function () {
+              imageWrapper.parentNode.removeChild(imageWrapper); // Remove the image wrapper
+              event.target.files = removeFileFromList(event.target.files, file)
+            });
+
+
+            // Append the image and cross button to the image wrapper
+            imageWrapper.insertBefore(img, imageWrapper.children[0]);
+            imageWrapper.appendChild(crossButton);
+          };
+
+          // Append the image wrapper to the container
+          imageWrapper.appendChild(details);
+          imageContainer.appendChild(imageWrapper);
+        }
+      }
+    }
+
+    function constructFileList(fileArray){
+      const dt = new DataTransfer()
+      fileArray.forEach(
+        file=>dt.items.add(file)
+      )
+      return dt.files
+    }
+
+    function removeFileFromList(fileList, fileToRemove) {
+      const files = Array.from(fileList); // Convert FileList to an array
+      const filteredFiles = files.filter(function (file) {
+        return file.name !== fileToRemove.name; // Filter out the file to remove
+      });
+      formMultipleInputFiles = filteredFiles;
+      return constructFileList(filteredFiles)
+}
+    function approve(index){
+      const record = records[index]
+      fetch('/api/approve-record?id='+ record[18], {method: 'put'})
+        .then(res => location.reload())
+
+    }
+    const user = parseJwt(getCookieValue('token'));
+    if (user.role === 'admin'){
+      document.getElementById('nav-create-user').classList.remove('d-none')
+    }
+  </script>
+
+  <script src="./form-submit.js"></script>
+  <style>
+    .selected-image {
+      max-width: 200px;
+      max-height: 150px;
+      margin: 10px;
+    }
+
+    .image-wrapper {
+      vertical-align: top;
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      height: 200px;
+      justify-content: space-between;
+    }
+
+    .remove-button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      color: red;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</html>
